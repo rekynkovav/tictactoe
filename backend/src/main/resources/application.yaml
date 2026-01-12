@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: 8080
+
+cors:
+  allowed-origins: "http://localhost:3000,http://localhost:80,http://localhost,http://127.0.0.1:80,http://127.0.0.1"
+
+telegram:
+  enabled: ${TELEGRAM_BOT_ENABLED:true}
+  token: ${TELEGRAM_BOT_TOKEN}
+  username: ${TELEGRAM_BOT_USERNAME}
+  chat-id: ${TELEGRAM_CHAT_ID:}
