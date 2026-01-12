@@ -1,7 +1,5 @@
--- Создаем расширение для UUID если нужно
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Создаем таблицу игроков если не существует (Spring Data JPA создаст сам, но можно и так)
 DO
 $$
     BEGIN

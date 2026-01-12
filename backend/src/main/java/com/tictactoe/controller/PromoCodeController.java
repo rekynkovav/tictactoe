@@ -42,7 +42,6 @@ public class PromoCodeController {
             return ResponseEntity.notFound().build();
         }
 
-        // Преобразуем в DTO
         PromoCodeDTO dto = new PromoCodeDTO();
         dto.setId(promoCode.getId());
         dto.setCode(promoCode.getCode());

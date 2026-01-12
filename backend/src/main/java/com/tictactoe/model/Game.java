@@ -7,12 +7,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,13 +32,12 @@ public class Game {
     @Column(name = "telegram_chat_id")
     private String telegramChatId;
 
-    // Используем JSONB тип PostgreSQL для хранения матрицы 3x3
     @Type(JsonType.class)
     @Column(name = "board", columnDefinition = "jsonb")
     private String[][] board;
 
     @Column(name = "current_player", nullable = false, length = 1)
-    private String currentPlayer = "X"; // X - игрок, O - компьютер
+    private String currentPlayer = "X";
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
@@ -51,7 +47,7 @@ public class Game {
     private String playerId;
 
     @Column(name = "promo_code", length = 20)
-    private String promoCode; // Промокод выданный при победе
+    private String promoCode;
 
     @Column(name = "player_moves_count")
     private Integer playerMovesCount = 0;
@@ -60,7 +56,7 @@ public class Game {
     private Integer computerMovesCount = 0;
 
     @Column(name = "winning_line")
-    private String winningLine; // Сохраняем выигрышную линию для отображения на фронтенде
+    private String winningLine;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -74,9 +70,8 @@ public class Game {
     private LocalDateTime finishedAt;
 
     @Column(name = "game_duration_seconds")
-    private Long gameDurationSeconds; // Длительность игры в секундах
+    private Long gameDurationSeconds;
 
-    // Конструктор для инициализации пустой доски
     public Game(String playerId) {
         this.playerId = playerId;
         initializeEmptyBoard();
@@ -89,26 +84,6 @@ public class Game {
             for (int j = 0; j < 3; j++) {
                 this.board[i][j] = "";
             }
-        }
-    }
-
-    // Вспомогательный метод для получения значения клетки
-    @JsonIgnore
-    public String getCell(int row, int col) {
-        if (board == null || row < 0 || row >= 3 || col < 0 || col >= 3) {
-            return "";
-        }
-        return board[row][col];
-    }
-
-    // Вспомогательный метод для установки значения клетки
-    @JsonIgnore
-    public void setCell(int row, int col, String value) {
-        if (board == null) {
-            initializeEmptyBoard();
-        }
-        if (row >= 0 && row < 3 && col >= 0 && col < 3) {
-            board[row][col] = value;
         }
     }
 
@@ -141,15 +116,6 @@ public class Game {
         return count;
     }
 
-    // Метод для завершения игры
-    public void finishGame(GameStatus finalStatus) {
-        this.status = finalStatus;
-        this.finishedAt = LocalDateTime.now();
-        if (this.createdAt != null && this.finishedAt != null) {
-            this.gameDurationSeconds = java.time.Duration.between(this.createdAt, this.finishedAt).getSeconds();
-        }
-    }
-
     // Перечисление статусов игры
     public enum GameStatus {
         IN_PROGRESS("В процессе"),
@@ -169,7 +135,6 @@ public class Game {
         }
     }
 
-    // Метод для преобразования доски в строку (удобно для логирования)
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -192,7 +157,6 @@ public class Game {
         return sb.toString();
     }
 
-    // Методы equals и hashCode для корректной работы с JPA
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

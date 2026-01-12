@@ -17,8 +17,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -84,28 +82,22 @@ public class TelegramService extends TelegramLongPollingBot {
     private void sendWelcomeMessage(String chatId) {
         log.info("📨 Обработка команды /start для chatId: {}", chatId);
 
-        // 1. Генерируем уникальный playerId для этого пользователя
         String playerId = "player_" + System.currentTimeMillis() + "_" + new Random().nextInt(1000);
         log.info("✅ Сгенерирован playerId: {}", playerId);
 
-        // 2. Сохраняем связь playerId <-> chatId
         savePlayerTelegramLink(playerId, chatId);
         log.info("✅ Сохранена связь: playerId={} -> chatId={}", playerId, chatId);
 
-        // 3. Формируем ссылку с параметрами
         String gameBaseUrl = gameUrl;
 
-        // Убедимся, что URL правильный
         if (!gameBaseUrl.startsWith("http")) {
             gameBaseUrl = "http://" + gameBaseUrl;
         }
 
-        // Формируем полный URL с параметрами
         String gameUrlWithParams = gameBaseUrl + "/?playerId=" + playerId + "&telegramChatId=" + chatId;
 
         log.info("✅ Сформирована ссылка: {}", gameUrlWithParams);
 
-        // 4. Формируем сообщение со ссылкой
         String message = "🎮 *Добро пожаловать в игру Крестики-нолики!*\n\n" +
                          "🎯 *Ваш Player ID:* `" + playerId + "`\n" +
                          "🎯 *Ваш Chat ID:* `" + chatId + "`\n\n" +
@@ -120,7 +112,6 @@ public class TelegramService extends TelegramLongPollingBot {
                          "✅ При победе получите промокод в этом чате!\n\n" +
                          "💡 *Совет:* Сохраните эту ссылку для быстрого доступа к игре!";
 
-        // 5. Отправляем сообщение
         sendMessage(chatId, message);
         log.info("✅ Сообщение отправлено пользователю chatId: {}", chatId);
     }
@@ -217,7 +208,6 @@ public class TelegramService extends TelegramLongPollingBot {
                     message += "⏱️ *Завершена:* " + game.getFinishedAt().format(formatter) + "\n\n";
                 }
 
-                // Отображаем доску
                 message += "🎲 *Доска:*\n";
                 String[][] board = game.getBoard();
                 for (int i = 0; i < 3; i++) {
@@ -234,7 +224,6 @@ public class TelegramService extends TelegramLongPollingBot {
                     message += "\n";
                 }
 
-                // Добавляем кнопку для игры
                 message += "\n🎮 *Начать новую игру:*\n";
                 message += "[Начать игру](" + gameUrl + ")";
 
@@ -352,49 +341,18 @@ public class TelegramService extends TelegramLongPollingBot {
     }
 
     /**
-     * Обработка команды /start
-     */
-    private void handleStartCommand(String chatId, Long userId) {
-        // Генерируем playerId для этого пользователя
-        String playerId = "player_" + userId + "_" + System.currentTimeMillis();
-
-        // Сохраняем связь
-        savePlayerTelegramLink(playerId, chatId);
-
-        // Отправляем сообщение с ссылкой для игры
-        String gameUrlWithParams = gameUrl + "?playerId=" + playerId + "&telegramChatId=" + chatId;
-
-        String message = "🎮 *Добро пожаловать в игру Крестики-нолики!*\n\n" +
-                         "🎯 *Ваш Player ID:* `" + playerId + "`\n" +
-                         "🎯 *Ваш Chat ID:* `" + chatId + "`\n\n" +
-                         "🎮 *Начать играть:*\n" +
-                         "Просто нажмите на ссылку ниже и игра запустится автоматически!\n\n" +
-                         "🔗 [Начать игру](" + gameUrlWithParams + ")\n\n" +
-                         "📋 *После нажатия на ссылку:*\n" +
-                         "1. Игра откроется в браузере\n" +
-                         "2. Ваши данные подставятся автоматически\n" +
-                         "3. Начните играть!\n\n" +
-                         "💡 *Совет:* Сохраните эту ссылку для быстрого доступа к игре!";
-
-        sendMessage(chatId, message);
-        log.info("✅ Зарегистрирован новый игрок: playerId={}, chatId={}", playerId, chatId);
-    }
-
-    /**
      * Сохранить связь между playerId и telegramChatId
      */
     private void savePlayerTelegramLink(String playerId, String telegramChatId) {
         Optional<PlayerTelegramLink> existingLink = playerTelegramLinkRepository.findByPlayerId(playerId);
 
         if (existingLink.isPresent()) {
-            // Обновляем существующую запись
             PlayerTelegramLink link = existingLink.get();
             link.setTelegramChatId(telegramChatId);
             link.setLastUpdated(LocalDateTime.now());
             playerTelegramLinkRepository.save(link);
             log.debug("Обновлена связь playerId {} -> telegramChatId {}", playerId, telegramChatId);
         } else {
-            // Создаем новую запись
             PlayerTelegramLink newLink = new PlayerTelegramLink();
             newLink.setPlayerId(playerId);
             newLink.setTelegramChatId(telegramChatId);
@@ -403,28 +361,5 @@ public class TelegramService extends TelegramLongPollingBot {
             playerTelegramLinkRepository.save(newLink);
             log.debug("Создана связь playerId {} -> telegramChatId {}", playerId, telegramChatId);
         }
-    }
-
-    /**
-     * Получить Chat ID по playerId
-     */
-    public String getTelegramChatIdByPlayerId(String playerId) {
-        return playerTelegramLinkRepository.findByPlayerId(playerId)
-                .map(PlayerTelegramLink::getTelegramChatId)
-                .orElse(null);
-    }
-
-    /**
-     * Получить Player ID по Chat ID
-     */
-    public String getPlayerIdByTelegramChatId(String telegramChatId) {
-        return playerTelegramLinkRepository.findByTelegramChatId(telegramChatId)
-                .map(PlayerTelegramLink::getPlayerId)
-                .orElseGet(() -> {
-                    // Если не найден, создаем новый
-                    String newPlayerId = "player_" + System.currentTimeMillis();
-                    savePlayerTelegramLink(newPlayerId, telegramChatId);
-                    return newPlayerId;
-                });
     }
 }

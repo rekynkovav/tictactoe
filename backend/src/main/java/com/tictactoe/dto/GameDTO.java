@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.tictactoe.model.Game;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 @Data
@@ -20,7 +19,6 @@ public class GameDTO {
     private String finishedAt;
     private Boolean isFinished;
 
-    // Для отображения на фронтенде
     private Integer occupiedCells;
     private Boolean isPlayerTurn;
     private String winner;

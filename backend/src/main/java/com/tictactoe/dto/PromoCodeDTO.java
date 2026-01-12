@@ -16,8 +16,7 @@ public class PromoCodeDTO {
     private LocalDateTime usedAt;
     private Integer discountPercent;
 
-    // Для фронтенда
     private String formattedCreatedAt;
     private String formattedUsedAt;
-    private String status; // "ACTIVE" или "USED"
+    private String status;
 }

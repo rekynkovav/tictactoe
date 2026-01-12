@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +45,6 @@ public class GameController {
 
     @PostMapping("/move")
     public ResponseEntity<GameResponseDTO> makeMove(@RequestBody @Valid MoveRequestDTO moveRequest) {
-        // Передайте gameId из DTO
         GameResponseDTO response = gameService.makePlayerMove(moveRequest);
         return ResponseEntity.ok(response);
     }

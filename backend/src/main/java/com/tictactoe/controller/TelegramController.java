@@ -64,7 +64,6 @@ public class TelegramController {
             throw new IllegalArgumentException("playerId и telegramChatId обязательны");
         }
 
-        // Сохраняем связь
         Optional<PlayerTelegramLink> existingLink = playerTelegramLinkRepository.findByPlayerId(playerId);
 
         PlayerTelegramLink link;

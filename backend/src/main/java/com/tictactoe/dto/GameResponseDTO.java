@@ -9,8 +9,8 @@ public class GameResponseDTO {
     private boolean success;
     private String message;
     private GameDTO game;
-    private ComputerMoveDTO computerMove; // Ход компьютера, если был
-    private String promoCode; // Промокод, если игрок победил
+    private ComputerMoveDTO computerMove;
+    private String promoCode;
 
     @Data
     public static class ComputerMoveDTO {
@@ -25,7 +25,6 @@ public class GameResponseDTO {
         }
     }
 
-    // Фабричные методы
     public static GameResponseDTO success(GameDTO game, String message) {
         GameResponseDTO response = new GameResponseDTO();
         response.setSuccess(true);

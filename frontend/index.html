@@ -328,9 +328,8 @@
         }
     }
 
-    // В инициализации при загрузке страницы:
     document.addEventListener('DOMContentLoaded', () => {
-        cleanupLocalStorage(); // Очищаем перед началом
+        cleanupLocalStorage();
         initializeBoard();
         resetGameState();
     });
@@ -408,7 +407,7 @@
         return params;
     }
 
-    // Создание новой игры (обновленная версия)
+    // Создание новой игры
     async function createNewGame() {
         try {
             resetGameState();
@@ -439,9 +438,6 @@
                 console.log('📱 Используем telegramChatId из localStorage:', telegramChatId);
             }
 
-            // 3. Если всё еще нет, но есть playerId в URL - это значит пользователь
-            // пришел по ссылке из Telegram, но без chatId
-            // В этом случае можно либо ничего не делать, либо создать игру без уведомлений
             if (!telegramChatId && urlParams.playerId) {
                 console.log('⚠️ Telegram chatId не найден, но игра продолжится без уведомлений');
             }
@@ -479,14 +475,12 @@
 
             if (game.telegramChatId) {
                 console.log('✅ Telegram уведомления будут отправлены на chatId:', game.telegramChatId);
-                // Показываем пользователю, что Telegram подключен
                 currentPlayerEl.innerHTML = '✅ Telegram подключен!<br>Ваш ход!';
             } else {
                 console.warn('⚠️ Telegram chatId не указан, уведомления не будут отправляться:', {
                     receivedFromServer: game.telegramChatId,
                     sentToServer: telegramChatId
                 });
-                // Просто логируем, не вызываем несуществующую функцию
                 console.log('ℹ️ Для получения уведомлений напишите /start боту @TicTacToePrizeBot');
             }
 

@@ -47,7 +47,6 @@ public class GameService {
         String playerId = request.getPlayerId() != null ? request.getPlayerId() : generatePlayerId();
         game.setPlayerId(playerId);
 
-        // Автоматически определяем telegramChatId
         String telegramChatId = determineTelegramChatId(request, playerId);
 
         if (telegramChatId != null) {
@@ -74,7 +73,6 @@ public class GameService {
      * Автоматически определить telegramChatId
      */
     private String determineTelegramChatId(NewGameRequestDTO request, String playerId) {
-        // 1. Пробуем взять из запроса (если передали через параметры URL)
         String telegramChatId = request.getTelegramChatId();
 
         if (telegramChatId != null &&
@@ -96,7 +94,6 @@ public class GameService {
     }
 
     private void savePlayerTelegramLink(String playerId, String telegramChatId) {
-        // Та же логика сохранения, что и в TelegramService
         Optional<PlayerTelegramLink> existingLink = playerTelegramLinkRepository.findByPlayerId(playerId);
 
         if (existingLink.isPresent()) {
@@ -119,7 +116,6 @@ public class GameService {
      */
     @Transactional
     public GameResponseDTO makePlayerMove(MoveRequestDTO moveRequest) {
-        // Найти игру
         Optional<Game> gameOpt = gameRepository.findById(moveRequest.getGameId());
         if (gameOpt.isEmpty()) {
             return GameResponseDTO.error("Игра не найдена");
@@ -127,17 +123,14 @@ public class GameService {
 
         Game game = gameOpt.get();
 
-        // Проверка статуса игры
         if (game.getStatus() != Game.GameStatus.IN_PROGRESS) {
             return GameResponseDTO.error("Игра уже завершена");
         }
 
-        // Проверка, что ходит игрок
         if (!"X".equals(game.getCurrentPlayer())) {
             return GameResponseDTO.error("Сейчас не ваш ход");
         }
 
-        // Проверка валидности хода
         String[][] board = game.getBoard();
         int row = moveRequest.getRow();
         int col = moveRequest.getColumn();
@@ -150,22 +143,18 @@ public class GameService {
             return GameResponseDTO.error("Клетка уже занята");
         }
 
-        // Делаем ход игрока
         board[row][col] = "X";
         game.setBoard(board);
 
-        // Проверяем, выиграл ли игрок
         if (checkWin(board, "X")) {
             game.setStatus(Game.GameStatus.PLAYER_WON);
             game.setFinishedAt(LocalDateTime.now());
 
-            // Генерируем промокод
             String promoCode = promoCodeService.generateAndSavePromoCode(game);
             game.setPromoCode(promoCode);
 
             gameRepository.save(game);
 
-            // Отправляем сообщение в Telegram
             if (game.getTelegramChatId() != null && !game.getTelegramChatId().isEmpty()) {
                 telegramService.sendWinNotification(game.getTelegramChatId(), promoCode);
             } else {
@@ -176,13 +165,11 @@ public class GameService {
             return GameResponseDTO.successWithPromoCode(GameDTO.fromEntity(game), promoCode);
         }
 
-        // Проверяем ничью
         if (isBoardFull(board)) {
             game.setStatus(Game.GameStatus.DRAW);
             game.setFinishedAt(LocalDateTime.now());
             gameRepository.save(game);
 
-            // Отправляем сообщение в Telegram о ничье
             if (game.getTelegramChatId() != null && !game.getTelegramChatId().isEmpty()) {
                 telegramService.sendDrawNotification(game.getTelegramChatId());
             } else {
@@ -193,11 +180,9 @@ public class GameService {
             return GameResponseDTO.success(GameDTO.fromEntity(game), "Ничья!");
         }
 
-        // Передаем ход компьютеру
         game.setCurrentPlayer("O");
         gameRepository.save(game);
 
-        // Ход компьютера
         GameResponseDTO.ComputerMoveDTO computerMove = makeComputerMove(game);
 
         return GameResponseDTO.successWithComputerMove(
@@ -213,7 +198,6 @@ public class GameService {
     private GameResponseDTO.ComputerMoveDTO makeComputerMove(Game game) {
         String[][] board = game.getBoard();
 
-        // 1. Попытаться выиграть
         Integer[] winMove = findWinningMove(board, "O");
         if (winMove != null) {
             board[winMove[0]][winMove[1]] = "O";
@@ -223,7 +207,6 @@ public class GameService {
             game.setFinishedAt(LocalDateTime.now());
             gameRepository.save(game);
 
-            // Отправляем сообщение в Telegram о проигрыше
             if (game.getTelegramChatId() != null && !game.getTelegramChatId().isEmpty()) {
                 telegramService.sendLoseNotification(game.getTelegramChatId());
             } else {
@@ -234,7 +217,6 @@ public class GameService {
             return new GameResponseDTO.ComputerMoveDTO(winMove[0], winMove[1], "O");
         }
 
-        // 2. Блокировать игрока
         Integer[] blockMove = findWinningMove(board, "X");
         if (blockMove != null) {
             board[blockMove[0]][blockMove[1]] = "O";
@@ -244,7 +226,6 @@ public class GameService {
             return new GameResponseDTO.ComputerMoveDTO(blockMove[0], blockMove[1], "O");
         }
 
-        // 3. Занять центр, если свободен
         if (board[1][1] == null || board[1][1].isEmpty()) {
             board[1][1] = "O";
             game.setBoard(board);
@@ -253,7 +234,6 @@ public class GameService {
             return new GameResponseDTO.ComputerMoveDTO(1, 1, "O");
         }
 
-        // 4. Занять угол
         int[][] corners = {{0, 0}, {0, 2}, {2, 0}, {2, 2}};
         for (int[] corner : corners) {
             if (board[corner[0]][corner[1]] == null || board[corner[0]][corner[1]].isEmpty()) {
@@ -265,7 +245,6 @@ public class GameService {
             }
         }
 
-        // 5. Случайный ход
         Random random = new Random();
         int row, col;
         do {
@@ -285,17 +264,15 @@ public class GameService {
      * Найти выигрышный ход для указанного символа
      */
     private Integer[] findWinningMove(String[][] board, String symbol) {
-        // Проверяем все клетки
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
                 if (board[i][j] == null || board[i][j].isEmpty()) {
-                    // Пробуем поставить символ
                     board[i][j] = symbol;
                     if (checkWin(board, symbol)) {
-                        board[i][j] = null; // Возвращаем обратно
+                        board[i][j] = null;
                         return new Integer[]{i, j};
                     }
-                    board[i][j] = ""; // Возвращаем обратно
+                    board[i][j] = "";
                 }
             }
         }
@@ -306,7 +283,6 @@ public class GameService {
      * Проверка на победу
      */
     private boolean checkWin(String[][] board, String symbol) {
-        // Преобразуем 2D массив в 1D для удобства проверки
         String[] flatBoard = new String[9];
         int index = 0;
         for (int i = 0; i < 3; i++) {
@@ -315,7 +291,6 @@ public class GameService {
             }
         }
 
-        // Проверяем все выигрышные комбинации
         for (int[] combination : WINNING_COMBINATIONS) {
             if (flatBoard[combination[0]] != null && flatBoard[combination[0]].equals(symbol) &&
                 flatBoard[combination[1]] != null && flatBoard[combination[1]].equals(symbol) &&
@@ -364,9 +339,5 @@ public class GameService {
      */
     private String generatePlayerId() {
         return "player_" + System.currentTimeMillis() + "_" + new Random().nextInt(1000);
-    }
-
-    public List<Game> findByPlayerId(String playerId) {
-        return gameRepository.findByPlayerId(playerId);
     }
 }
