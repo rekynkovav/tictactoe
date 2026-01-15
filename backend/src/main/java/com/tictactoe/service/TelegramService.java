@@ -32,9 +32,9 @@ public class TelegramService extends TelegramLongPollingBot {
     private final GameRepository gameRepository;
     private final PromoCodeRepository promoCodeRepository;
 
-    private String botToken = "8520423880:AAEr5qID0DsjFP82kyVzIgb7dzpZpnZrNbI";
+    private String botToken = "8370738061:AAGFiocsJM3afH9HAyTQkZ0SHS30GBJrTe8";
 
-    private String botUsername = "TicTacToePrizeBot";
+    private String botUsername = "Tic_Tac_Toe_Prize_Bot";
 
     @Value("${app.game-url:http://localhost}")
     private String gameUrl;
